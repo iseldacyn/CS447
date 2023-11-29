@@ -147,6 +147,7 @@ int *check_bulbs( vertex_t *v, int *conds, int num )
 /* walk through graph to ensure everything looks good */
 void check_graph( vertex_t *v )
 {
+
 }
 
 /* print function */
