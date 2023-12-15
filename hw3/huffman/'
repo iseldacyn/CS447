@@ -1,0 +1,96 @@
+from sys import argv
+
+class Tree:
+    def __init__( self, label, freq, left, right ):
+        self.label = label
+        self.freq = freq
+        self.left = left
+        self.right = right
+
+def merge( t1, t2 ):
+    if t1 is None:
+        return t2
+    elif t2 is None:
+        return t1
+
+    if t1.freq < t2.freq:
+        T = Tree( t2.label+t1.label, t2.freq+t1.freq, t2, t1 )
+    elif t1.freq > t2.freq:
+        T = Tree( t1.label+t2.label, t1.freq+t2.freq, t1, t2 )
+    else:
+        if t1.label > t2.label:
+            T = Tree( t1.label+t2.label, t1.freq+t2.freq, t1, t2 )
+        else:
+            T = Tree( t2.label+t1.label, t1.freq+t2.freq, t2, t1 )
+    return T
+
+
+# make a dictionary with encoded values from Huffman tree
+def make_dict_from_tree( t ):
+    if t.left is None and t.right is None:
+        return {t.label: '0'}
+
+    d = {}
+    d.update( dict_from_tree( t.left, '0' ) )
+    d.update( dict_from_tree( t.right, '1' ) )
+    return d
+
+# helper function
+def dict_from_tree( t, s ):
+    if t.left is None and t.right is None:
+        return {t.label: s}
+
+    d = {}
+    d.update( dict_from_tree( t.left, s+'0' ) )
+    d.update( dict_from_tree( t.right, s+'1' ) )
+    return d
+
+# encode values from freq dictionary
+def encode( d ):
+    # build out tree until there are no more left to merge
+    T = None
+    while len(d) > 1:
+        # get two least frequent items in d 
+        i1 = min( d, key=d.get ) 
+        v1 = d[i1]
+        del d[i1]
+        i2 = min( d, key=d.get ) 
+        v2 = d[i2]
+        del d[i2]
+
+        # merge!
+        t1 = Tree( i1, v1, None, None )
+        t2 = Tree( i2, v2, None, None )
+        t0 = merge( t1, t2 )
+
+        # update value in dictionary and add to main tree
+        d.update( {t0.label: t0.freq} )
+        if T is None:
+            T = t0
+        elif t1 is T:
+            T = merge( T, t2 )
+        elif t2 is T:
+            T = merge( T, t1 )
+        else:
+            T = merge( T, t0 )
+
+    # return dictionary of encoded characters
+    return make_dict_from_tree( T )
+
+def print_dict( d ):
+    d = dict(sorted(d.items()))
+    for i, j in d.items():
+        if i == '\n':
+            print( f'[\\n] -> {j}' )
+        else:
+            print( f'[{i}] -> {j}' )
+
+freq = {}
+with open( argv[1], "r" ) as input:
+    for line in input:
+        for char in line:
+            if char not in freq:
+                freq.update( {char: 0} )
+            freq[char] += 1
+
+print_dict( encode(freq) )
